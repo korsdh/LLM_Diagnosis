@@ -1,3 +1,4 @@
+# dataset.py
 import pandas as pd
 from tqdm import tqdm
 import ast
@@ -154,21 +155,21 @@ class VibrationDataset(Dataset):
         if self.test_mode:
             self.index_map = self.index_map[:30]
 
-    def _extract_segment(self, row_idx, start):
+    def _extract_segment(self, row_idx, start): # 캐시된 전체 신호에서 원하는 구간(window)을 잘라 2채널(x,y)로 반환
         """Return (seg ndarray shape (2, win_n)) for the given row & start, respecting cache_mode."""
         row = self.meta_df.iloc[row_idx]
-        meta = self._row_meta[row_idx]
+        meta = self._row_meta[row_idx] # row_idx: 메타 테이블의 행 인덱스 (어떤 파일인지)
         sr, x_idx, y_idx, win_n = meta["sr"], meta["x_idx"], meta["y_idx"], meta["win_n"]
 
         base = self._file_cache[row_idx]
-        x_seg = base[x_idx, start:start+win_n]
+        x_seg = base[x_idx, start:start+win_n] # start: 해당 파일 안에서 윈도우의 시작 샘플 인덱스
         y_seg = base[y_idx, start:start+win_n]
 
         seg = np.stack([x_seg, y_seg], axis=0) if self.channel_order==("x","y") \
               else np.stack([y_seg, x_seg], axis=0)
         return seg
 
-    def _pick_ref_reference(self, dataset, load_condition):
+    def _pick_ref_reference(self, dataset, load_condition): # reference 구간 하나 가져오기
         """Return (row_idx, start) of a normal sample matching (dataset, load_condition) if available,
         otherwise same dataset only, otherwise None."""
         key = (dataset, load_condition)
@@ -562,7 +563,7 @@ def visualize_imaging_tensor(
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='Vibration LLM training/evaluation script')
-    parser.add_argument('--data_root',   type=str, default='/Volumes/dataset_onlyMac/processed', help='llm_dataset_caching.py를 통해 만들어진 데이터 pt파일경로')
+    parser.add_argument('--data_root',   type=str, default=r'D:\SDH\PHM_LLM2\LLM_Diagnosis\data\processed', help='llm_dataset_caching.py를 통해 만들어진 데이터 pt파일경로')
     parser.add_argument('--batch_size',    type=int, default=32, help='학습 배치사이즈')
     args = parser.parse_args()
     
